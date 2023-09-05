@@ -16,12 +16,63 @@ db.init_app(app)
 
 api = Api(app)
 
-class Plants(Resource):
-    pass
 
+# /Flask application in app.py has a resource available at "/plants".
+# /Flask application in app.py returns JSON representing Plant objects at "/plants".
+# /Flask application in app.py allows users to create Plant records through the "/plants" POST route.
+class Plants(Resource):
+    def get(self):
+
+        response_dict_list = [p.to_dict() for p in Plant.query.all()]
+
+        response = make_response(
+            response_dict_list,
+            200,
+        )
+        return response
+    
+
+    def post(self):
+        data = request.get_json()
+
+        new_record = Plant(
+            name = data['name'],
+            image = data['image'],
+            price = data['price'],
+        )
+
+        db.session.add(new_record)
+        db.session.commit()
+
+        response_dict = new_record.to_dict()
+
+        response = make_response(
+            response_dict,
+            201,
+        )
+        return response
+    
+api.add_resource(Plants, '/plants')
+    
+
+
+# /Flask application in app.py has a resource available at "/plants/<int:id>".
+# /Flask application in app.py returns JSON representing one Plant object at "/plants/<int:id>"
 class PlantByID(Resource):
-    pass
+    def get(self, id):
+
+        response_dict = Plant.query.filter_by(id=id).first().to_dict()
+
+        response = make_response(
+            response_dict,
+            200,
+        )
+        return response
+    
+api.add_resource(PlantByID, '/plants/<int:id>')
         
+
+
 
 if __name__ == '__main__':
     app.run(port=5555, debug=True)
